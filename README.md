@@ -1,6 +1,6 @@
 # Digitizer AI
 
-**Live Demo:** [https://digitizer-ai.onrender.com](https://digitizer-ai.onrender.com)
+**Live Demo:** [https://digitizer-ai.onrender.com]((https://digitizer-ai-1.onrender.com/))
 
 Digitizer AI is a Next.js web application that uses Google's advanced Gemini AI to convert messy, unstructured information into highly structured, actionable digital data. It is primarily built for two use cases:
 1. **Professor Notes:** Instantly transforms pictures of messy whiteboard or blackboard logic/math notes into beautifully structured JSON containing definitions, equations, and topics.
