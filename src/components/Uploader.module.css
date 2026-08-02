@@ -1,0 +1,55 @@
+.uploader {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--border-color);
+  cursor: pointer;
+  padding: 2rem;
+}
+
+.uploader.dragging {
+  border-color: var(--accent-primary);
+  background: var(--bg-glass-hover);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.iconWrapper {
+  color: var(--accent-primary);
+  background: rgba(59, 130, 246, 0.1);
+  padding: 1rem;
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.uploader h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.uploader p {
+  color: var(--text-muted);
+}
+
+.processing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  color: var(--accent-primary);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
