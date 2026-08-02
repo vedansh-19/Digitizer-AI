@@ -73,7 +73,15 @@ export default function Home() {
                   &larr; Upload Another
                 </button>
                 <div className="glass-panel" style={{ padding: "1rem", marginBottom: "1.5rem" }}>
-                  <img src={image} alt="Uploaded" className={styles.previewImage} />
+                  {image.startsWith("data:image/") ? (
+                    <img src={image} alt="Uploaded" className={styles.previewImage} />
+                  ) : image.startsWith("data:application/pdf") ? (
+                    <embed src={image} type="application/pdf" className={styles.previewImage} style={{ width: "100%", height: "400px", borderRadius: "8px" }} />
+                  ) : (
+                    <div className={styles.previewImage} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                      <p>Document Uploaded</p>
+                    </div>
+                  )}
                 </div>
                 <ResultsViewer result={result} isProcessing={isProcessing} mode={mode} />
               </div>

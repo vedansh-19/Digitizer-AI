@@ -35,8 +35,9 @@ export async function POST(req: Request) {
     let prompt = "";
     if (mode === "notes") {
       prompt = `
-You are an expert at transcribing and organizing messy handwritten notes from whiteboards, blackboards, or notebooks.
-Analyze the attached image and extract the information into a structured JSON format.
+You are an expert at transcribing, organizing, and explaining messy handwritten notes, PDFs, and documents from whiteboards, blackboards, or notebooks.
+Analyze the attached document and extract the information into a structured JSON format.
+Ensure you provide a detailed explanation of the concepts.
 Follow this JSON schema strictly, without any markdown formatting like \`\`\`json:
 {
   "title": "Main topic or title of the notes",
@@ -46,13 +47,15 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
       "points": ["Point 1", "Point 2"]
     }
   ],
-  "summary": "A brief summary of what the notes are about",
+  "detailedExplanation": "A very detailed, comprehensive explanation of all the concepts covered in the notes/document",
+  "summary": "A brief summary of what the notes/document are about",
   "additionalInfo": "Any other context, formulas, diagrams described in text, or side notes"
 }`;
     } else {
       prompt = `
-You are an expert pharmacist and medical assistant skilled at reading messy doctor's prescriptions.
-Analyze the attached image and extract the prescription details into a structured JSON format.
+You are an expert pharmacist and medical assistant skilled at reading messy doctor's prescriptions and medical reports.
+Analyze the attached document and extract the details into a structured JSON format.
+Provide a detailed explanation of the prescribed items or report findings.
 Follow this JSON schema strictly, without any markdown formatting like \`\`\`json:
 {
   "doctorName": "Name of the doctor if visible",
@@ -66,6 +69,7 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
       "duration": "Duration (e.g., 5 days)"
     }
   ],
+  "detailedExplanation": "A detailed explanation of the medicines, what they are used for, potential side effects, and any medical advice given",
   "summary": "Any general instructions or advice written",
   "additionalInfo": "Any other details like follow-up date, clinic name, etc."
 }`;

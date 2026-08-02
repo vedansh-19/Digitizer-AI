@@ -23,41 +23,41 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
   };
 
   const processFile = (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      alert("Please upload an image file.");
-      return;
-    }
-    
     const reader = new FileReader();
     reader.onload = (e) => {
       if (e.target?.result) {
-        // Compress image using canvas
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
-          
-          // Max dimension 1200px
-          const MAX_DIMENSION = 1200;
-          if (width > height && width > MAX_DIMENSION) {
-            height = Math.round((height * MAX_DIMENSION) / width);
-            width = MAX_DIMENSION;
-          } else if (height > MAX_DIMENSION) {
-            width = Math.round((width * MAX_DIMENSION) / height);
-            height = MAX_DIMENSION;
-          }
-          
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Compress to JPEG with 0.8 quality
-          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.8);
-          onUpload(compressedBase64);
-        };
-        img.src = e.target.result as string;
+        if (file.type.startsWith("image/")) {
+          // Compress image using canvas
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
+            
+            // Max dimension 1200px
+            const MAX_DIMENSION = 1200;
+            if (width > height && width > MAX_DIMENSION) {
+              height = Math.round((height * MAX_DIMENSION) / width);
+              width = MAX_DIMENSION;
+            } else if (height > MAX_DIMENSION) {
+              width = Math.round((width * MAX_DIMENSION) / height);
+              height = MAX_DIMENSION;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            // Compress to JPEG with 0.8 quality
+            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.8);
+            onUpload(compressedBase64);
+          };
+          img.src = e.target.result as string;
+        } else {
+          // For non-images (like PDF), just pass the base64 directly
+          onUpload(e.target.result as string);
+        }
       }
     };
     reader.readAsDataURL(file);
@@ -95,22 +95,21 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
         type="file" 
         ref={fileInputRef} 
         onChange={handleChange} 
-        accept="image/*" 
         style={{ display: "none" }} 
       />
       
       {isProcessing ? (
         <div className={styles.processing}>
           <Loader2 className={styles.spinner} size={48} />
-          <p>Analyzing image with AI...</p>
+          <p>Analyzing document with AI...</p>
         </div>
       ) : (
         <div className={styles.content}>
           <div className={styles.iconWrapper}>
             <UploadCloud size={48} />
           </div>
-          <h3>Click or drag image to upload</h3>
-          <p>Supports JPG, PNG, WEBP</p>
+          <h3>Click or drag file to upload</h3>
+          <p>Supports Image, PDF & Other Documents</p>
         </div>
       )}
     </motion.div>

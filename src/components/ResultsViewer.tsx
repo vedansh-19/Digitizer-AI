@@ -85,6 +85,13 @@ export default function ResultsViewer({ result, isProcessing, mode }: ResultsVie
           </div>
         )}
 
+        {result.detailedExplanation && (
+          <div className={styles.section}>
+            <h4>Detailed Explanation</h4>
+            <p style={{ lineHeight: "1.6", color: "var(--text-secondary)" }}>{result.detailedExplanation}</p>
+          </div>
+        )}
+
         {result.summary && (
           <div className={styles.summaryBox}>
             <h4>Summary</h4>
