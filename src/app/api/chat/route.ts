@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { message, context, history } = await req.json();
+    const { message, context, history, language = "English" } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -16,11 +16,12 @@ export async function POST(req: Request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-    const systemPrompt = `You are a helpful AI assistant in an app that digitizes messy notes and prescriptions.
-You have been provided with the following extracted data from an image:
+    const systemPrompt = `You are a helpful AI assistant in an app that digitizes messy notes and transcriptions.
+You have been provided with the following extracted data from a user's input:
 ${JSON.stringify(context, null, 2)}
 
-Answer the user's questions based on this context. Keep your answers concise, clear, and helpful.`;
+Answer the user's questions based on this context. Keep your answers concise, clear, and helpful.
+CRITICAL INSTRUCTION: You MUST reply entirely in ${language}. Do not use any other language in your response.`;
 
     const chatHistory = history.map((msg: any) => ({
       role: msg.role === "user" ? "user" : "model",

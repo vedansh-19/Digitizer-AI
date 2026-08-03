@@ -6,6 +6,7 @@ import { Mode } from "@/app/page";
 interface ChatProps {
   context: any;
   mode: Mode;
+  language: string;
 }
 
 interface Message {
@@ -13,7 +14,7 @@ interface Message {
   content: string;
 }
 
-export default function Chat({ context, mode }: ChatProps) {
+export default function Chat({ context, mode, language }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "model",
@@ -48,7 +49,8 @@ export default function Chat({ context, mode }: ChatProps) {
         body: JSON.stringify({
           message: userMessage,
           context,
-          history: messages
+          history: messages,
+          language
         })
       });
       

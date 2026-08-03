@@ -10,8 +10,13 @@ import { AnimatePresence, motion } from "framer-motion";
 
 export type Mode = "notes" | "lecture";
 
+export const LANGUAGES = [
+  "English", "Spanish", "French", "German", "Hindi", "Chinese", "Arabic", "Portuguese", "Russian", "Japanese"
+];
+
 export default function Home() {
   const [mode, setMode] = useState<Mode>("notes");
+  const [language, setLanguage] = useState<string>("English");
   const [image, setImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -23,15 +28,15 @@ export default function Home() {
     
     try {
       const isYoutube = base64Image.includes("youtube.com") || base64Image.includes("youtu.be");
-      const payload = isYoutube 
-        ? { youtubeUrl: base64Image, mode } 
-        : { image: base64Image, mode };
+        const payload = isYoutube 
+          ? { youtubeUrl: base64Image, mode, language } 
+          : { image: base64Image, mode, language };
 
-      const res = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setResult(data.result);
@@ -50,7 +55,7 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
-      <Header mode={mode} setMode={setMode} />
+      <Header mode={mode} setMode={setMode} language={language} setLanguage={setLanguage} />
       
       <div className={`container ${styles.content}`}>
         <AnimatePresence mode="wait">
@@ -105,7 +110,7 @@ export default function Home() {
               </div>
               
               <div className={styles.rightPanel}>
-                <Chat context={result} mode={mode} />
+                <Chat context={result} mode={mode} language={language} />
               </div>
             </motion.div>
           )}

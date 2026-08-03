@@ -4,7 +4,7 @@ import { YoutubeTranscript } from "youtube-transcript";
 
 export async function POST(req: Request) {
   try {
-    const { image, mode, youtubeUrl } = await req.json();
+    const { image, mode, youtubeUrl, language = "English" } = await req.json();
     if (!image && !youtubeUrl) {
       return NextResponse.json({ error: "No input provided" }, { status: 400 });
     }
@@ -51,6 +51,7 @@ You are an expert at transcribing, organizing, and explaining messy handwritten 
 Analyze the attached document and extract the information into a structured JSON format.
 Ensure you provide a detailed explanation of the concepts.
 CRITICAL INSTRUCTION: Do NOT hallucinate or invent information. If the document is unreadable, empty, or contains no useful text, you must return an error or clearly state in the summary that the document could not be read.
+CRITICAL LANGUAGE INSTRUCTION: You MUST generate the ENTIRE JSON response exclusively in ${language}. Do not use any other language.
 Follow this JSON schema strictly, without any markdown formatting like \`\`\`json:
 {
   "title": "Main topic or title of the notes",
@@ -70,6 +71,7 @@ You are an expert academic assistant and transcriptionist.
 Analyze the attached audio lecture recording or document and extract the information into a structured JSON format.
 Ensure you provide a high-level summary, detailed notes, key points, action items (like homework), and a quiz.
 CRITICAL INSTRUCTION: Do NOT hallucinate or invent information. Rely STRICTLY on the provided transcript or audio. If the input is empty or incomprehensible, state that it could not be read.
+CRITICAL LANGUAGE INSTRUCTION: You MUST generate the ENTIRE JSON response exclusively in ${language}. Do not use any other language.
 Follow this JSON schema strictly, without any markdown formatting like \`\`\`json:
 {
   "title": "Title of the lecture or topic",
