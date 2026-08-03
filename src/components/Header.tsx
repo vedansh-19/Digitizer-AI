@@ -1,4 +1,4 @@
-import { Sparkles, FileText, Stethoscope } from "lucide-react";
+import { Sparkles, FileText, Stethoscope, AudioLines } from "lucide-react";
 import styles from "./Header.module.css";
 import { Mode } from "@/app/page";
 
@@ -30,6 +30,13 @@ export default function Header({ mode, setMode }: HeaderProps) {
           >
             <Stethoscope size={18} />
             <span>Prescriptions</span>
+          </button>
+          <button 
+            className={`${styles.modeBtn} ${mode === "lecture" ? styles.active : ""}`}
+            onClick={() => setMode("lecture")}
+          >
+            <AudioLines size={18} />
+            <span>Lecture</span>
           </button>
         </div>
       </div>

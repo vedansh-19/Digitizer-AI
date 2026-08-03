@@ -109,7 +109,7 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
             <UploadCloud size={48} />
           </div>
           <h3>Click or drag file to upload</h3>
-          <p>Supports Image, PDF & Other Documents</p>
+          <p>Supports Image, PDF, Documents & Audio (MP3/WAV)</p>
         </div>
       )}
     </motion.div>

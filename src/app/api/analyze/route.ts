@@ -51,6 +51,26 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
   "summary": "A brief summary of what the notes/document are about",
   "additionalInfo": "Any other context, formulas, diagrams described in text, or side notes"
 }`;
+    } else if (mode === "lecture") {
+      prompt = `
+You are an expert academic assistant and transcriptionist.
+Analyze the attached audio lecture recording or document and extract the information into a structured JSON format.
+Ensure you provide a high-level summary, detailed notes, key points, action items (like homework), and a quiz.
+Follow this JSON schema strictly, without any markdown formatting like \`\`\`json:
+{
+  "title": "Title of the lecture or topic",
+  "summary": "High-level summary of the recording",
+  "keyPoints": ["Point 1", "Point 2", "Point 3"],
+  "notes": "Detailed, well-structured notes extracted from the lecture",
+  "actionItems": ["Homework 1", "Readings to do"],
+  "quiz": [
+    {
+      "question": "A relevant multiple-choice question?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "answer": "The exact text of the correct option"
+    }
+  ]
+}`;
     } else {
       prompt = `
 You are an expert pharmacist and medical assistant skilled at reading messy doctor's prescriptions and medical reports.

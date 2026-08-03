@@ -8,7 +8,7 @@ import Chat from "@/components/Chat";
 import styles from "./page.module.css";
 import { AnimatePresence, motion } from "framer-motion";
 
-export type Mode = "notes" | "prescription";
+export type Mode = "notes" | "prescription" | "lecture";
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>("notes");
@@ -57,8 +57,10 @@ export default function Home() {
               exit={{ opacity: 0, y: -20 }}
               className={styles.uploaderWrapper}
             >
-              <h2 className="text-gradient">Digitize Your {mode === "notes" ? "Professor's Notes" : "Medical Prescriptions"}</h2>
-              <p>Upload a messy image and let AI extract the structured data.</p>
+              <h2 className="text-gradient">
+                {mode === "notes" ? "Digitize Your Professor's Notes" : mode === "prescription" ? "Digitize Your Medical Prescriptions" : "Transcribe Your Audio Lectures"}
+              </h2>
+              <p>Upload a file and let AI extract the structured data.</p>
               <Uploader onUpload={handleUpload} isProcessing={isProcessing} />
             </motion.div>
           ) : (
