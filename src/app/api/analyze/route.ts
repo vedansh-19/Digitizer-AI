@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         const transcript = await YoutubeTranscript.fetchTranscript(youtubeUrl);
         transcriptText = transcript.map(t => t.text).join(" ");
       } catch (err: any) {
-        throw new Error("Could not fetch YouTube transcript. The video might not have captions enabled.");
+        console.warn("Could not fetch YouTube transcript. Falling back to native Gemini video analysis.", err.message);
       }
     } else if (image) {
       const base64Data = image.split(",")[1];
@@ -87,7 +87,9 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
 
     let result;
     if (youtubeUrl) {
-      const fullPrompt = `${prompt}\n\nHere is the video transcript to analyze:\n${transcriptText}`;
+      const fullPrompt = transcriptText 
+        ? `${prompt}\n\nHere is the video transcript to analyze:\n${transcriptText}`
+        : `${prompt}\n\nPlease analyze this YouTube video natively: ${youtubeUrl}`;
       result = await model.generateContent(fullPrompt);
     } else {
       result = await model.generateContent([prompt, ...imageParts]);
