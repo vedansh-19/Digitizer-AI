@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: digitizer-app
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: "20.x"
+      - key: GEMINI_API_KEY
+        sync: false
