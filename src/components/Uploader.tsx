@@ -110,6 +110,25 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
           </div>
           <h3>Click or drag file to upload</h3>
           <p>Supports Image, PDF, Documents & Audio (MP3/WAV)</p>
+          
+          <div className={styles.youtubeInputContainer} style={{ marginTop: "1.5rem", width: "100%" }}>
+            <p style={{ margin: "1rem 0 0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Or paste a YouTube URL:</p>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <input 
+                type="url" 
+                placeholder="https://youtube.com/watch?v=..." 
+                className="input-field"
+                style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.2)", color: "white" }}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  const url = e.target.value;
+                  if (url.includes("youtube.com") || url.includes("youtu.be")) {
+                    onUpload(url);
+                  }
+                }}
+              />
+            </div>
+          </div>
         </div>
       )}
     </motion.div>

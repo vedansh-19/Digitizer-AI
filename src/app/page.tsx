@@ -8,7 +8,7 @@ import Chat from "@/components/Chat";
 import styles from "./page.module.css";
 import { AnimatePresence, motion } from "framer-motion";
 
-export type Mode = "notes" | "prescription" | "lecture";
+export type Mode = "notes" | "lecture";
 
 export default function Home() {
   const [mode, setMode] = useState<Mode>("notes");
@@ -22,10 +22,15 @@ export default function Home() {
     setResult(null);
     
     try {
+      const isYoutube = base64Image.includes("youtube.com") || base64Image.includes("youtu.be");
+      const payload = isYoutube 
+        ? { youtubeUrl: base64Image, mode } 
+        : { image: base64Image, mode };
+
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: base64Image, mode })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -58,7 +63,7 @@ export default function Home() {
               className={styles.uploaderWrapper}
             >
               <h2 className="text-gradient">
-                {mode === "notes" ? "Digitize Your Professor's Notes" : mode === "prescription" ? "Digitize Your Medical Prescriptions" : "Transcribe Your Audio Lectures"}
+                {mode === "notes" ? "Digitize Your Professor's Notes" : "Transcribe Your Audio Lectures"}
               </h2>
               <p>Upload a file and let AI extract the structured data.</p>
               <Uploader onUpload={handleUpload} isProcessing={isProcessing} />
@@ -75,7 +80,18 @@ export default function Home() {
                   &larr; Upload Another
                 </button>
                 <div className="glass-panel" style={{ padding: "1rem", marginBottom: "1.5rem" }}>
-                  {image.startsWith("data:image/") ? (
+                  {image.includes("youtube.com") || image.includes("youtu.be") ? (
+                    <iframe 
+                      width="100%" 
+                      height="300" 
+                      src={`https://www.youtube.com/embed/${image.includes("v=") ? image.split("v=")[1].split("&")[0] : image.split("youtu.be/")[1]?.split("?")[0]}`} 
+                      title="YouTube video player" 
+                      frameBorder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowFullScreen
+                      style={{ borderRadius: "8px" }}
+                    ></iframe>
+                  ) : image.startsWith("data:image/") ? (
                     <img src={image} alt="Uploaded" className={styles.previewImage} />
                   ) : image.startsWith("data:application/pdf") ? (
                     <embed src={image} type="application/pdf" className={styles.previewImage} style={{ width: "100%", height: "400px", borderRadius: "8px" }} />

@@ -1,11 +1,12 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
+import { YoutubeTranscript } from "youtube-transcript";
 
 export async function POST(req: Request) {
   try {
-    const { image, mode } = await req.json();
-    if (!image) {
-      return NextResponse.json({ error: "No image provided" }, { status: 400 });
+    const { image, mode, youtubeUrl } = await req.json();
+    if (!image && !youtubeUrl) {
+      return NextResponse.json({ error: "No input provided" }, { status: 400 });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -19,18 +20,29 @@ export async function POST(req: Request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-    // Prepare image for Gemini API
-    const base64Data = image.split(",")[1];
-    const mimeType = image.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)?.[1] || "image/jpeg";
-    
-    const imageParts = [
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType
+    let imageParts: any[] = [];
+    let transcriptText = "";
+
+    if (youtubeUrl) {
+      try {
+        const transcript = await YoutubeTranscript.fetchTranscript(youtubeUrl);
+        transcriptText = transcript.map(t => t.text).join(" ");
+      } catch (err: any) {
+        throw new Error("Could not fetch YouTube transcript. The video might not have captions enabled.");
+      }
+    } else if (image) {
+      const base64Data = image.split(",")[1];
+      const mimeType = image.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)?.[1] || "image/jpeg";
+      
+      imageParts = [
+        {
+          inlineData: {
+            data: base64Data,
+            mimeType
+          },
         },
-      },
-    ];
+      ];
+    }
 
     let prompt = "";
     if (mode === "notes") {
@@ -51,7 +63,7 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
   "summary": "A brief summary of what the notes/document are about",
   "additionalInfo": "Any other context, formulas, diagrams described in text, or side notes"
 }`;
-    } else if (mode === "lecture") {
+    } else {
       prompt = `
 You are an expert academic assistant and transcriptionist.
 Analyze the attached audio lecture recording or document and extract the information into a structured JSON format.
@@ -71,31 +83,15 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
     }
   ]
 }`;
-    } else {
-      prompt = `
-You are an expert pharmacist and medical assistant skilled at reading messy doctor's prescriptions and medical reports.
-Analyze the attached document and extract the details into a structured JSON format.
-Provide a detailed explanation of the prescribed items or report findings.
-Follow this JSON schema strictly, without any markdown formatting like \`\`\`json:
-{
-  "doctorName": "Name of the doctor if visible",
-  "patientName": "Name of the patient if visible",
-  "date": "Date of the prescription if visible",
-  "medicines": [
-    {
-      "name": "Name of the medicine",
-      "dosage": "Dosage (e.g., 500mg)",
-      "frequency": "Frequency (e.g., twice a day)",
-      "duration": "Duration (e.g., 5 days)"
-    }
-  ],
-  "detailedExplanation": "A detailed explanation of the medicines, what they are used for, potential side effects, and any medical advice given",
-  "summary": "Any general instructions or advice written",
-  "additionalInfo": "Any other details like follow-up date, clinic name, etc."
-}`;
     }
 
-    const result = await model.generateContent([prompt, ...imageParts]);
+    let result;
+    if (youtubeUrl) {
+      const fullPrompt = `${prompt}\n\nHere is the video transcript to analyze:\n${transcriptText}`;
+      result = await model.generateContent(fullPrompt);
+    } else {
+      result = await model.generateContent([prompt, ...imageParts]);
+    }
     const response = await result.response;
     const text = response.text();
     

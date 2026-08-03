@@ -1,6 +1,6 @@
 import { Mode } from "@/app/page";
 import styles from "./ResultsViewer.module.css";
-import { CheckCircle2, FileText, Stethoscope, Loader2 } from "lucide-react";
+import { CheckCircle2, FileText, Loader2 } from "lucide-react";
 
 interface ResultsViewerProps {
   result: any;
@@ -24,8 +24,8 @@ export default function ResultsViewer({ result, isProcessing, mode }: ResultsVie
     <div className={`glass-panel ${styles.resultsContainer} animate-fade-in`}>
       <div className={styles.header}>
         <div className={styles.titleWrapper}>
-          {mode === "notes" ? <FileText className="text-gradient" /> : mode === "prescription" ? <Stethoscope className="text-gradient" /> : <FileText className="text-gradient" />}
-          <h3>{mode === "notes" ? "Structured Notes" : mode === "prescription" ? "Digitized Prescription" : "Lecture Notes"}</h3>
+          <FileText className="text-gradient" />
+          <h3>{mode === "notes" ? "Structured Notes" : "Lecture Notes"}</h3>
         </div>
         <div className={styles.statusBadge}>
           <CheckCircle2 size={14} />
@@ -34,40 +34,6 @@ export default function ResultsViewer({ result, isProcessing, mode }: ResultsVie
       </div>
 
       <div className={styles.content}>
-        {mode === "prescription" && result.doctorName && (
-          <div className={styles.cardSection}>
-            <div className={styles.fieldGroup}>
-              <span className={styles.label}>Doctor Name</span>
-              <span className={styles.value}>{result.doctorName}</span>
-            </div>
-            <div className={styles.fieldGroup}>
-              <span className={styles.label}>Patient Name</span>
-              <span className={styles.value}>{result.patientName || "Not specified"}</span>
-            </div>
-            <div className={styles.fieldGroup}>
-              <span className={styles.label}>Date</span>
-              <span className={styles.value}>{result.date || "Not specified"}</span>
-            </div>
-          </div>
-        )}
-
-        {mode === "prescription" && result.medicines && result.medicines.length > 0 && (
-          <div className={styles.section}>
-            <h4>Prescribed Medicines</h4>
-            <div className={styles.medicineList}>
-              {result.medicines.map((med: any, idx: number) => (
-                <div key={idx} className={styles.medicineItem}>
-                  <div className={styles.medName}>{med.name}</div>
-                  <div className={styles.medDetails}>
-                    {med.dosage && <span>{med.dosage}</span>}
-                    {med.frequency && <span>&bull; {med.frequency}</span>}
-                    {med.duration && <span>&bull; {med.duration}</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {mode === "notes" && result.title && (
           <div className={styles.section}>
