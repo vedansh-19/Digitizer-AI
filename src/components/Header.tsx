@@ -1,5 +1,5 @@
 import { Sparkles, FileText, AudioLines, Globe } from "lucide-react";
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import styles from "./Header.module.css";
 import { Mode, LANGUAGES } from "@/app/page";
 
@@ -11,6 +11,8 @@ interface HeaderProps {
 }
 
 export default function Header({ mode, setMode, language, setLanguage }: HeaderProps) {
+  const { userId } = useAuth();
+
   return (
     <header className={`${styles.header} glass-panel`}>
       <div className={`container ${styles.headerContent}`}>
@@ -59,14 +61,13 @@ export default function Header({ mode, setMode, language, setLanguage }: HeaderP
         </div>
 
         <div style={{ marginLeft: "1rem", display: "flex", alignItems: "center" }}>
-          <SignedOut>
+          {!userId ? (
             <SignInButton mode="modal">
               <button className="btn-primary" style={{ padding: "0.4rem 1rem", fontSize: "0.9rem" }}>Sign In</button>
             </SignInButton>
-          </SignedOut>
-          <SignedIn>
+          ) : (
             <UserButton afterSignOutUrl="/" />
-          </SignedIn>
+          )}
         </div>
 
       </div>

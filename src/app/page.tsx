@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Uploader from "@/components/Uploader";
 import ResultsViewer from "@/components/ResultsViewer";
 import Chat from "@/components/Chat";
 import styles from "./page.module.css";
 import { AnimatePresence, motion } from "framer-motion";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { SignInButton, useAuth } from "@clerk/nextjs";
 
 export type Mode = "notes" | "lecture";
 
@@ -16,16 +16,31 @@ export const LANGUAGES = [
 ];
 
 export default function Home() {
+  const { userId } = useAuth();
+  const [mounted, setMounted] = useState(false);
+  const [freeUses, setFreeUses] = useState<number>(0);
   const [mode, setMode] = useState<Mode>("notes");
   const [language, setLanguage] = useState<string>("English");
   const [images, setImages] = useState<string[] | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<any>(null);
 
+  useEffect(() => {
+    setMounted(true);
+    const uses = localStorage.getItem("freeUses");
+    if (uses) setFreeUses(parseInt(uses, 10));
+  }, []);
+
   const handleUpload = async (base64Images: string[]) => {
     setImages(base64Images);
     setIsProcessing(true);
     setResult(null);
+
+    if (!userId) {
+      const newUses = freeUses + 1;
+      setFreeUses(newUses);
+      localStorage.setItem("freeUses", newUses.toString());
+    }
     
     try {
         const payload = { images: base64Images, mode, language };
@@ -70,19 +85,24 @@ export default function Home() {
               </h2>
               <p>Upload a file and let AI extract the structured data.</p>
               
-              <SignedIn>
-                <Uploader onUpload={handleUpload} isProcessing={isProcessing} />
-              </SignedIn>
-
-              <SignedOut>
+              {!mounted ? null : userId || freeUses < 2 ? (
+                <>
+                  {!userId && (
+                    <p style={{ color: "var(--accent-secondary)", fontSize: "0.9rem", marginTop: "-0.5rem", marginBottom: "1rem" }}>
+                      Free uses remaining: {2 - freeUses}
+                    </p>
+                  )}
+                  <Uploader onUpload={handleUpload} isProcessing={isProcessing} />
+                </>
+              ) : (
                 <div style={{ marginTop: "2rem", padding: "3rem", background: "rgba(0,0,0,0.2)", borderRadius: "12px", border: "1px dashed rgba(255,255,255,0.1)" }}>
                   <h3 style={{ marginBottom: "1rem" }}>Sign in to continue</h3>
-                  <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem" }}>You must be logged in to upload and analyze documents.</p>
+                  <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem" }}>You've used up your 2 free uploads. Please create an account to continue using the app!</p>
                   <SignInButton mode="modal">
                     <button className="btn-primary" style={{ padding: "0.8rem 1.5rem" }}>Sign In or Create Account</button>
                   </SignInButton>
                 </div>
-              </SignedOut>
+              )}
 
             </motion.div>
           ) : (
