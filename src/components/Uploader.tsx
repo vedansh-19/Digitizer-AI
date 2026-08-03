@@ -4,7 +4,7 @@ import styles from "./Uploader.module.css";
 import { motion } from "framer-motion";
 
 interface UploaderProps {
-  onUpload: (base64: string) => void;
+  onUpload: (base64s: string[]) => void;
   isProcessing: boolean;
 }
 
@@ -22,45 +22,47 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
     }
   };
 
-  const processFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        if (file.type.startsWith("image/")) {
-          // Compress image using canvas
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            let width = img.width;
-            let height = img.height;
-            
-            // Max dimension 1200px
-            const MAX_DIMENSION = 1200;
-            if (width > height && width > MAX_DIMENSION) {
-              height = Math.round((height * MAX_DIMENSION) / width);
-              width = MAX_DIMENSION;
-            } else if (height > MAX_DIMENSION) {
-              width = Math.round((width * MAX_DIMENSION) / height);
-              height = MAX_DIMENSION;
+  const processFiles = async (files: FileList | File[]) => {
+    const promises = Array.from(files).map((file) => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          if (e.target?.result) {
+            if (file.type.startsWith("image/")) {
+              const img = new Image();
+              img.onload = () => {
+                const canvas = document.createElement("canvas");
+                let width = img.width;
+                let height = img.height;
+                
+                const MAX_DIMENSION = 1200;
+                if (width > height && width > MAX_DIMENSION) {
+                  height = Math.round((height * MAX_DIMENSION) / width);
+                  width = MAX_DIMENSION;
+                } else if (height > MAX_DIMENSION) {
+                  width = Math.round((width * MAX_DIMENSION) / height);
+                  height = MAX_DIMENSION;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                ctx?.drawImage(img, 0, 0, width, height);
+                
+                resolve(canvas.toDataURL("image/jpeg", 0.8));
+              };
+              img.src = e.target.result as string;
+            } else {
+              resolve(e.target.result as string);
             }
-            
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext("2d");
-            ctx?.drawImage(img, 0, 0, width, height);
-            
-            // Compress to JPEG with 0.8 quality
-            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.8);
-            onUpload(compressedBase64);
-          };
-          img.src = e.target.result as string;
-        } else {
-          // For non-images (like PDF), just pass the base64 directly
-          onUpload(e.target.result as string);
-        }
-      }
-    };
-    reader.readAsDataURL(file);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    const base64s = await Promise.all(promises);
+    onUpload(base64s);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -68,15 +70,15 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
     e.stopPropagation();
     setIsDragging(false);
     
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      processFile(e.dataTransfer.files[0]);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFiles(e.dataTransfer.files);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
-    if (e.target.files && e.target.files[0]) {
-      processFile(e.target.files[0]);
+    if (e.target.files && e.target.files.length > 0) {
+      processFiles(e.target.files);
     }
   };
 
@@ -96,6 +98,7 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
         ref={fileInputRef} 
         onChange={handleChange} 
         style={{ display: "none" }} 
+        multiple
       />
       
       {isProcessing ? (
@@ -111,24 +114,6 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
           <h3>Click or drag file to upload</h3>
           <p>Supports Image, PDF, Documents & Audio (MP3/WAV)</p>
           
-          <div className={styles.youtubeInputContainer} style={{ marginTop: "1.5rem", width: "100%" }}>
-            <p style={{ margin: "1rem 0 0.5rem", fontSize: "0.9rem", color: "var(--text-secondary)" }}>Or paste a YouTube URL:</p>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <input 
-                type="url" 
-                placeholder="https://youtube.com/watch?v=..." 
-                className="input-field"
-                style={{ flex: 1, padding: "0.75rem", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.2)", color: "white" }}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => {
-                  const url = e.target.value;
-                  if (url.includes("youtube.com") || url.includes("youtu.be")) {
-                    onUpload(url);
-                  }
-                }}
-              />
-            </div>
-          </div>
         </div>
       )}
     </motion.div>

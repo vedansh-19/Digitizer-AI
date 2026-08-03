@@ -1,11 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
-import { YoutubeTranscript } from "youtube-transcript";
 
 export async function POST(req: Request) {
   try {
-    const { image, mode, youtubeUrl, language = "English" } = await req.json();
-    if (!image && !youtubeUrl) {
+    const { images, mode, language = "English" } = await req.json();
+    if (!images || images.length === 0) {
       return NextResponse.json({ error: "No input provided" }, { status: 400 });
     }
 
@@ -21,27 +20,17 @@ export async function POST(req: Request) {
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     let imageParts: any[] = [];
-    let transcriptText = "";
-
-    if (youtubeUrl) {
-      try {
-        const transcript = await YoutubeTranscript.fetchTranscript(youtubeUrl);
-        transcriptText = transcript.map(t => t.text).join(" ");
-      } catch (err: any) {
-        throw new Error("Could not fetch YouTube transcript. The video might not have captions enabled or is restricted.");
-      }
-    } else if (image) {
+    
+    for (const image of images) {
       const base64Data = image.split(",")[1];
       const mimeType = image.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)?.[1] || "image/jpeg";
       
-      imageParts = [
-        {
-          inlineData: {
-            data: base64Data,
-            mimeType
-          },
+      imageParts.push({
+        inlineData: {
+          data: base64Data,
+          mimeType
         },
-      ];
+      });
     }
 
     let prompt = "";
@@ -63,7 +52,13 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
   ],
   "detailedExplanation": "A very detailed, comprehensive explanation of all the concepts covered in the notes/document",
   "summary": "A brief summary of what the notes/document are about",
-  "additionalInfo": "Any other context, formulas, diagrams described in text, or side notes"
+  "additionalInfo": "Any other context, formulas, diagrams described in text, or side notes",
+  "flashcards": [
+    {
+      "front": "Question or term based on the notes",
+      "back": "Answer or definition"
+    }
+  ]
 }`;
     } else {
       prompt = `
@@ -85,19 +80,17 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
       "options": ["Option A", "Option B", "Option C", "Option D"],
       "answer": "The exact text of the correct option"
     }
+  ],
+  "flashcards": [
+    {
+      "front": "Key concept or question from the lecture",
+      "back": "Explanation or answer"
+    }
   ]
 }`;
     }
 
-    let result;
-    if (youtubeUrl) {
-      const fullPrompt = transcriptText 
-        ? `${prompt}\n\nHere is the video transcript to analyze:\n${transcriptText}`
-        : `${prompt}\n\nPlease analyze this YouTube video natively: ${youtubeUrl}`;
-      result = await model.generateContent(fullPrompt);
-    } else {
-      result = await model.generateContent([prompt, ...imageParts]);
-    }
+    const result = await model.generateContent([prompt, ...imageParts]);
     const response = await result.response;
     const text = response.text();
     

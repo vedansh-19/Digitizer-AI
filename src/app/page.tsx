@@ -17,20 +17,17 @@ export const LANGUAGES = [
 export default function Home() {
   const [mode, setMode] = useState<Mode>("notes");
   const [language, setLanguage] = useState<string>("English");
-  const [image, setImage] = useState<string | null>(null);
+  const [images, setImages] = useState<string[] | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<any>(null);
 
-  const handleUpload = async (base64Image: string) => {
-    setImage(base64Image);
+  const handleUpload = async (base64Images: string[]) => {
+    setImages(base64Images);
     setIsProcessing(true);
     setResult(null);
     
     try {
-      const isYoutube = base64Image.includes("youtube.com") || base64Image.includes("youtu.be");
-        const payload = isYoutube 
-          ? { youtubeUrl: base64Image, mode, language } 
-          : { image: base64Image, mode, language };
+        const payload = { images: base64Images, mode, language };
 
         const res = await fetch("/api/analyze", {
           method: "POST",
@@ -49,7 +46,7 @@ export default function Home() {
   };
 
   const reset = () => {
-    setImage(null);
+    setImages(null);
     setResult(null);
   };
 
@@ -59,7 +56,7 @@ export default function Home() {
       
       <div className={`container ${styles.content}`}>
         <AnimatePresence mode="wait">
-          {!image ? (
+          {!images ? (
             <motion.div
               key="uploader"
               initial={{ opacity: 0, y: 20 }}
@@ -85,26 +82,21 @@ export default function Home() {
                   &larr; Upload Another
                 </button>
                 <div className="glass-panel" style={{ padding: "1rem", marginBottom: "1.5rem" }}>
-                  {image.includes("youtube.com") || image.includes("youtu.be") ? (
-                    <iframe 
-                      width="100%" 
-                      height="300" 
-                      src={`https://www.youtube.com/embed/${image.includes("v=") ? image.split("v=")[1].split("&")[0] : image.split("youtu.be/")[1]?.split("?")[0]}`} 
-                      title="YouTube video player" 
-                      frameBorder="0" 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                      allowFullScreen
-                      style={{ borderRadius: "8px" }}
-                    ></iframe>
-                  ) : image.startsWith("data:image/") ? (
-                    <img src={image} alt="Uploaded" className={styles.previewImage} />
-                  ) : image.startsWith("data:application/pdf") ? (
-                    <embed src={image} type="application/pdf" className={styles.previewImage} style={{ width: "100%", height: "400px", borderRadius: "8px" }} />
-                  ) : (
-                    <div className={styles.previewImage} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '200px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                      <p>Document Uploaded</p>
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                    {images.map((img, idx) => (
+                      <div key={idx} style={{ flexShrink: 0, width: images.length === 1 ? '100%' : '150px' }}>
+                        {img.startsWith("data:image/") ? (
+                          <img src={img} alt="Uploaded" className={styles.previewImage} style={{ height: images.length === 1 ? 'auto' : '150px', objectFit: 'cover' }} />
+                        ) : img.startsWith("data:application/pdf") ? (
+                          <embed src={img} type="application/pdf" className={styles.previewImage} style={{ width: "100%", height: images.length === 1 ? "400px" : "150px", borderRadius: "8px" }} />
+                        ) : (
+                          <div className={styles.previewImage} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: images.length === 1 ? '200px' : '150px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                            <p>Document</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <ResultsViewer result={result} isProcessing={isProcessing} mode={mode} />
               </div>

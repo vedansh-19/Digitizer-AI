@@ -1,6 +1,7 @@
 import { Mode } from "@/app/page";
 import styles from "./ResultsViewer.module.css";
 import { CheckCircle2, FileText, Loader2 } from "lucide-react";
+import Flashcards from "./Flashcards";
 
 interface ResultsViewerProps {
   result: any;
@@ -48,6 +49,10 @@ export default function ResultsViewer({ result, isProcessing, mode }: ResultsVie
                 </ul>
               </div>
             ))}
+            
+            {result.flashcards && result.flashcards.length > 0 && (
+              <Flashcards cards={result.flashcards} />
+            )}
           </div>
         )}
 
@@ -102,6 +107,10 @@ export default function ResultsViewer({ result, isProcessing, mode }: ResultsVie
                   </div>
                 ))}
               </div>
+            )}
+
+            {result.flashcards && result.flashcards.length > 0 && (
+              <Flashcards cards={result.flashcards} />
             )}
           </div>
         )}
