@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         const transcript = await YoutubeTranscript.fetchTranscript(youtubeUrl);
         transcriptText = transcript.map(t => t.text).join(" ");
       } catch (err: any) {
-        console.warn("Could not fetch YouTube transcript. Falling back to native Gemini video analysis.", err.message);
+        throw new Error("Could not fetch YouTube transcript. The video might not have captions enabled or is restricted.");
       }
     } else if (image) {
       const base64Data = image.split(",")[1];
@@ -50,6 +50,7 @@ export async function POST(req: Request) {
 You are an expert at transcribing, organizing, and explaining messy handwritten notes, PDFs, and documents from whiteboards, blackboards, or notebooks.
 Analyze the attached document and extract the information into a structured JSON format.
 Ensure you provide a detailed explanation of the concepts.
+CRITICAL INSTRUCTION: Do NOT hallucinate or invent information. If the document is unreadable, empty, or contains no useful text, you must return an error or clearly state in the summary that the document could not be read.
 Follow this JSON schema strictly, without any markdown formatting like \`\`\`json:
 {
   "title": "Main topic or title of the notes",
@@ -68,6 +69,7 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
 You are an expert academic assistant and transcriptionist.
 Analyze the attached audio lecture recording or document and extract the information into a structured JSON format.
 Ensure you provide a high-level summary, detailed notes, key points, action items (like homework), and a quiz.
+CRITICAL INSTRUCTION: Do NOT hallucinate or invent information. Rely STRICTLY on the provided transcript or audio. If the input is empty or incomprehensible, state that it could not be read.
 Follow this JSON schema strictly, without any markdown formatting like \`\`\`json:
 {
   "title": "Title of the lecture or topic",
