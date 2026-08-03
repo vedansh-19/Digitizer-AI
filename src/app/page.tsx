@@ -7,6 +7,7 @@ import ResultsViewer from "@/components/ResultsViewer";
 import Chat from "@/components/Chat";
 import styles from "./page.module.css";
 import { AnimatePresence, motion } from "framer-motion";
+import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
 
 export type Mode = "notes" | "lecture";
 
@@ -68,7 +69,21 @@ export default function Home() {
                 {mode === "notes" ? "Digitize Your Professor's Notes" : "Transcribe Your Audio Lectures"}
               </h2>
               <p>Upload a file and let AI extract the structured data.</p>
-              <Uploader onUpload={handleUpload} isProcessing={isProcessing} />
+              
+              <SignedIn>
+                <Uploader onUpload={handleUpload} isProcessing={isProcessing} />
+              </SignedIn>
+
+              <SignedOut>
+                <div style={{ marginTop: "2rem", padding: "3rem", background: "rgba(0,0,0,0.2)", borderRadius: "12px", border: "1px dashed rgba(255,255,255,0.1)" }}>
+                  <h3 style={{ marginBottom: "1rem" }}>Sign in to continue</h3>
+                  <p style={{ color: "var(--text-secondary)", marginBottom: "1.5rem" }}>You must be logged in to upload and analyze documents.</p>
+                  <SignInButton mode="modal">
+                    <button className="btn-primary" style={{ padding: "0.8rem 1.5rem" }}>Sign In or Create Account</button>
+                  </SignInButton>
+                </div>
+              </SignedOut>
+
             </motion.div>
           ) : (
             <motion.div

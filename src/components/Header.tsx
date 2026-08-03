@@ -1,4 +1,5 @@
 import { Sparkles, FileText, AudioLines, Globe } from "lucide-react";
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import styles from "./Header.module.css";
 import { Mode, LANGUAGES } from "@/app/page";
 
@@ -56,6 +57,18 @@ export default function Header({ mode, setMode, language, setLanguage }: HeaderP
             ))}
           </select>
         </div>
+
+        <div style={{ marginLeft: "1rem", display: "flex", alignItems: "center" }}>
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="btn-primary" style={{ padding: "0.4rem 1rem", fontSize: "0.9rem" }}>Sign In</button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
+        </div>
+
       </div>
     </header>
   );
