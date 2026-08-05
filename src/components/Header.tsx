@@ -44,18 +44,20 @@ export default function Header({ mode, setMode, language, setLanguage }: HeaderP
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
             style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'transparent',
+              border: '1px solid var(--border-color)',
               color: 'var(--text-primary)',
               padding: '0.4rem 0.8rem',
               borderRadius: '20px',
               fontSize: '0.9rem',
               outline: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontFamily: 'var(--font-sans)'
             }}
           >
             {LANGUAGES.map(lang => (
-              <option key={lang} value={lang} style={{ background: '#121212', color: 'white' }}>{lang}</option>
+              <option key={lang} value={lang}>{lang}</option>
             ))}
           </select>
         </div>

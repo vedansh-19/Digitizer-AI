@@ -2,11 +2,9 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  border-top: none;
-  padding: 1rem 0;
+  background-color: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1.5rem 0;
 }
 
 .headerContent {
@@ -20,19 +18,21 @@
   align-items: center;
   gap: 0.5rem;
   font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
 }
 
 .logoIcon {
-  color: var(--accent-primary);
+  color: var(--text-primary);
+  stroke-width: 2.5;
 }
 
 .modeSelector {
   display: flex;
   background: var(--bg-secondary);
-  padding: 0.25rem;
-  border-radius: var(--radius-md);
+  padding: 0.35rem;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border-color);
 }
 
@@ -40,10 +40,10 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: var(--radius-sm);
-  color: var(--text-secondary);
-  font-weight: 500;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-xl);
+  color: var(--text-muted);
+  font-weight: 600;
   transition: all var(--transition-fast);
 }
 
@@ -52,7 +52,8 @@
 }
 
 .modeBtn.active {
-  background: var(--bg-primary);
+  background: var(--bg-glass);
   color: var(--text-primary);
   box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
 }

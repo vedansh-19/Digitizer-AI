@@ -23,7 +23,17 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
   };
 
   const processFiles = async (files: FileList | File[]) => {
-    const promises = Array.from(files).map((file) => {
+    const validFiles = Array.from(files).filter(file => {
+      return file.type.startsWith("image/") || file.type === "application/pdf" || file.type.startsWith("audio/");
+    });
+
+    if (validFiles.length !== files.length) {
+      alert("Some files are unsupported! Gemini AI currently only accepts Images, PDFs, and Audio files via direct upload.");
+    }
+
+    if (validFiles.length === 0) return;
+
+    const promises = validFiles.map((file) => {
       return new Promise<string>((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -98,6 +108,7 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
         ref={fileInputRef} 
         onChange={handleChange} 
         style={{ display: "none" }} 
+        accept="image/*,application/pdf,audio/*"
         multiple
       />
       
@@ -112,7 +123,7 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
             <UploadCloud size={48} />
           </div>
           <h3>Click or drag file to upload</h3>
-          <p>Supports Image, PDF, Documents & Audio (MP3/WAV)</p>
+          <p>Supports Image, PDF & Audio (MP3/WAV)</p>
           
         </div>
       )}

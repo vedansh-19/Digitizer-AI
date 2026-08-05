@@ -35,10 +35,10 @@ export default function Flashcards({ cards }: FlashcardsProps) {
   };
 
   return (
-    <div className={styles.topicBlock} style={{ marginTop: "2rem", background: "rgba(0,0,0,0.2)", borderRadius: "12px", padding: "1.5rem" }}>
-      <h4 style={{ color: "var(--accent-primary)", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className={styles.topicBlock} style={{ marginTop: "2rem" }}>
+      <h4 style={{ color: "var(--text-primary)", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span>Flashcards Review</span>
-        <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{currentIndex + 1} / {cards.length}</span>
+        <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)", background: "var(--bg-secondary)", padding: "0.25rem 0.75rem", borderRadius: "1rem" }}>{currentIndex + 1} / {cards.length}</span>
       </h4>
 
       <div 
@@ -67,19 +67,20 @@ export default function Flashcards({ cards }: FlashcardsProps) {
             width: "100%",
             height: "100%",
             backfaceVisibility: "hidden",
-            background: "linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))",
-            border: "1px solid rgba(255,255,255,0.1)",
+            background: "var(--accent-primary)",
+            border: "2px solid var(--text-primary)",
             borderRadius: "16px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             padding: "2rem",
-            textAlign: "center"
+            textAlign: "center",
+            boxShadow: "var(--shadow-md)"
           }}>
-            <p style={{ fontSize: "0.9rem", color: "var(--accent-secondary)", marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "1px" }}>Question</p>
-            <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "white" }}>{cards[currentIndex].front}</h3>
-            <div style={{ position: "absolute", bottom: "1rem", right: "1rem", color: "rgba(255,255,255,0.3)" }}>
+            <p style={{ fontSize: "0.9rem", color: "var(--text-secondary)", marginBottom: "1rem", textTransform: "uppercase", fontWeight: 700, letterSpacing: "1px" }}>Question</p>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: "800", color: "var(--text-primary)" }}>{cards[currentIndex].front}</h3>
+            <div style={{ position: "absolute", bottom: "1rem", right: "1rem", color: "var(--text-primary)", opacity: 0.5 }}>
               <RotateCw size={20} />
             </div>
           </div>
@@ -90,8 +91,8 @@ export default function Flashcards({ cards }: FlashcardsProps) {
             width: "100%",
             height: "100%",
             backfaceVisibility: "hidden",
-            background: "linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(56, 189, 248, 0.2))",
-            border: "1px solid rgba(255,255,255,0.2)",
+            background: "var(--text-primary)",
+            border: "2px solid var(--text-primary)",
             borderRadius: "16px",
             display: "flex",
             flexDirection: "column",
@@ -99,10 +100,11 @@ export default function Flashcards({ cards }: FlashcardsProps) {
             justifyContent: "center",
             padding: "2rem",
             textAlign: "center",
-            transform: "rotateY(180deg)"
+            transform: "rotateY(180deg)",
+            boxShadow: "var(--shadow-md)"
           }}>
-            <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.7)", marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "1px" }}>Answer</p>
-            <p style={{ fontSize: "1.1rem", color: "white", lineHeight: "1.6" }}>{cards[currentIndex].back}</p>
+            <p style={{ fontSize: "0.9rem", color: "var(--accent-primary)", marginBottom: "1rem", textTransform: "uppercase", fontWeight: 700, letterSpacing: "1px" }}>Answer</p>
+            <p style={{ fontSize: "1.1rem", color: "var(--bg-primary)", lineHeight: "1.6", fontWeight: 500 }}>{cards[currentIndex].back}</p>
           </div>
         </motion.div>
       </div>
