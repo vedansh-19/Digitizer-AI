@@ -1,5 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
 import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
+import os from "os";
+
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   try {
@@ -17,20 +23,58 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
+    const fileManager = new GoogleAIFileManager(apiKey);
     const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     let imageParts: any[] = [];
+    let uploadedFiles: string[] = [];
     
     for (const image of images) {
       const base64Data = image.split(",")[1];
       const mimeType = image.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)?.[1] || "image/jpeg";
       
-      imageParts.push({
-        inlineData: {
-          data: base64Data,
-          mimeType
-        },
-      });
+      if (mimeType === "application/pdf") {
+        // Handle PDF with FileManager for large files
+        const buffer = Buffer.from(base64Data, 'base64');
+        const tempFilePath = path.join(os.tmpdir(), `upload-${Date.now()}-${Math.random().toString(36).substring(7)}.pdf`);
+        fs.writeFileSync(tempFilePath, buffer);
+        
+        try {
+          const uploadResponse = await fileManager.uploadFile(tempFilePath, {
+            mimeType: "application/pdf",
+          });
+          
+          let file = await fileManager.getFile(uploadResponse.file.name);
+          while (file.state === FileState.PROCESSING) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            file = await fileManager.getFile(uploadResponse.file.name);
+          }
+          
+          if (file.state === FileState.FAILED) {
+            throw new Error("PDF processing failed on Gemini servers.");
+          }
+          
+          imageParts.push({
+            fileData: {
+              fileUri: uploadResponse.file.uri,
+              mimeType: uploadResponse.file.mimeType
+            }
+          });
+          uploadedFiles.push(uploadResponse.file.name);
+        } finally {
+          // Cleanup temp file on disk
+          if (fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+          }
+        }
+      } else {
+        imageParts.push({
+          inlineData: {
+            data: base64Data,
+            mimeType
+          },
+        });
+      }
     }
 
     let prompt = "";
@@ -90,7 +134,20 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
 }`;
     }
 
-    const result = await model.generateContent([prompt, ...imageParts]);
+    let result;
+    try {
+      result = await model.generateContent([prompt, ...imageParts]);
+    } finally {
+      // Cleanup files from Gemini
+      for (const name of uploadedFiles) {
+        try {
+          await fileManager.deleteFile(name);
+        } catch (e) {
+          console.error("Failed to delete file from Gemini:", e);
+        }
+      }
+    }
+    
     const response = await result.response;
     const text = response.text();
     
@@ -108,6 +165,6 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
     return NextResponse.json({ result: parsedData });
   } catch (error: any) {
     console.error("API Error:", error);
-    return NextResponse.json({ error: error.message || "Failed to analyze image" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to analyze document" }, { status: 500 });
   }
 }
