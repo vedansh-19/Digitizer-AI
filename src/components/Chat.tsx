@@ -1,5 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Bot, User, MessageSquare } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import styles from "./Chat.module.css";
 import { Mode } from "@/app/page";
 
@@ -79,8 +84,13 @@ export default function Chat({ context, mode, language }: ChatProps) {
             <div className={styles.avatar}>
               {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
             </div>
-            <div className={styles.bubble}>
-              {msg.content}
+            <div className={`${styles.bubble} ${styles.markdownContent}`}>
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+              >
+                {msg.content}
+              </ReactMarkdown>
             </div>
           </div>
         ))}
