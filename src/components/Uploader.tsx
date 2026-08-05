@@ -108,7 +108,7 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
         ref={fileInputRef} 
         onChange={handleChange} 
         style={{ display: "none" }} 
-        accept="image/*,application/pdf,audio/*"
+        accept="image/*,application/pdf,audio/mpeg,audio/wav"
         multiple
       />
       
