@@ -1,4 +1,9 @@
-import { CheckCircle, AlertCircle, PlayCircle, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, PlayCircle, Loader2, BookOpen, Sigma } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import Flashcards from "./Flashcards";
 import styles from "./ResultsViewer.module.css";
 import { Mode } from "@/app/page";
@@ -65,6 +70,44 @@ export default function ResultsViewer({ result, isProcessing, mode }: { result: 
             <h4>Detailed Notes</h4>
             <div className={styles.rawText}>
               {result.notes}
+            </div>
+          </div>
+        )}
+
+        {result.pageByPage && result.pageByPage.length > 0 && (
+          <div className={styles.topicBlock}>
+            <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <BookOpen size={20} />
+              Page-by-Page Explanation
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {result.pageByPage.map((p: any, i: number) => (
+                <div key={i} style={{ borderLeft: '4px solid var(--accent-secondary)', paddingLeft: '1rem' }}>
+                  <p style={{ fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Page/Segment: {p.page}</p>
+                  <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6' }}>{p.explanation}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {result.formulas && result.formulas.length > 0 && (
+          <div className={styles.topicBlock}>
+            <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Sigma size={20} />
+              Extracted Formulas
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '12px' }}>
+              {result.formulas.map((formula: string, i: number) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'center', padding: '1rem', background: 'var(--bg-glass)', borderRadius: '8px', border: '1px solid var(--border-color)', overflowX: 'auto' }}>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm, remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
+                    {`$$${formula}$$`}
+                  </ReactMarkdown>
+                </div>
+              ))}
             </div>
           </div>
         )}

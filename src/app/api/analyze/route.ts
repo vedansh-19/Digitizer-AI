@@ -92,6 +92,15 @@ Extract the following information and return it EXACTLY as a raw JSON object (do
 {
   "title": "Title of the lecture or topic",
   "summary": "High-level summary of the recording",
+  "pageByPage": [
+    {
+      "page": "1",
+      "explanation": "Detailed explanation of the contents on page 1 or segment 1"
+    }
+  ],
+  "formulas": [
+    "E = mc^2"
+  ],
   "keyPoints": ["Point 1", "Point 2", "Point 3"],
   "notes": "Detailed, well-structured notes extracted from the lecture",
   "actionItems": ["Homework 1", "Readings to do"],
@@ -117,6 +126,15 @@ Extract the following information and return it EXACTLY as a raw JSON object (do
 {
   "title": "Title of the lecture or topic",
   "summary": "High-level summary of the recording",
+  "pageByPage": [
+    {
+      "page": "1",
+      "explanation": "Detailed explanation of the contents on page 1"
+    }
+  ],
+  "formulas": [
+    "E = mc^2"
+  ],
   "keyPoints": ["Point 1", "Point 2", "Point 3"],
   "notes": "Detailed, well-structured notes extracted from the lecture",
   "actionItems": ["Homework 1", "Readings to do"],

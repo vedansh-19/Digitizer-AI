@@ -24,11 +24,15 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
 
   const processFiles = async (files: FileList | File[]) => {
     const validFiles = Array.from(files).filter(file => {
-      return file.type.startsWith("image/") || file.type === "application/pdf" || file.type.startsWith("audio/");
+      return file.type.startsWith("image/") || 
+             file.type === "application/pdf" || 
+             file.type.startsWith("audio/") ||
+             file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+             file.type === "application/vnd.ms-powerpoint";
     });
 
     if (validFiles.length !== files.length) {
-      alert("Some files are unsupported! Gemini AI currently only accepts Images, PDFs, and Audio files via direct upload.");
+      alert("Some files are unsupported! Gemini AI currently only accepts Images, PDFs, Audio files, and PPTX via direct upload.");
     }
 
     if (validFiles.length === 0) return;
@@ -108,7 +112,7 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
         ref={fileInputRef} 
         onChange={handleChange} 
         style={{ display: "none" }} 
-        accept="image/*,application/pdf,audio/mpeg,audio/wav"
+        accept="image/*,application/pdf,audio/mpeg,audio/wav,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint"
         multiple
       />
       
@@ -123,7 +127,7 @@ export default function Uploader({ onUpload, isProcessing }: UploaderProps) {
             <UploadCloud size={48} />
           </div>
           <h3>Click or drag file to upload</h3>
-          <p>Supports Image, PDF & Audio (MP3/WAV)</p>
+          <p>Supports Image, PDF, Audio & PPTX</p>
           
         </div>
       )}
