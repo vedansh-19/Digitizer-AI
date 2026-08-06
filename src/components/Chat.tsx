@@ -8,41 +8,42 @@ import "katex/dist/katex.min.css";
 import styles from "./Chat.module.css";
 import { Mode } from "@/app/page";
 
+interface Message {
+  role: "user" | "model";
+  content: string;
+}
+
 interface ChatProps {
   context: any;
   mode: Mode;
   language: string;
 }
 
-interface Message {
-  role: "user" | "model";
-  content: string;
-}
-
 export default function Chat({ context, mode, language }: ChatProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "model",
-      content: `Hi! I've analyzed your ${mode}. What questions do you have?`
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  useEffect(() => {
+    if (context) {
+      setMessages([
+        {
+          role: "model",
+          content: `Hi! I've analyzed your ${mode === "notes" ? "notes" : "lecture"}. What questions do you have?`
+        }
+      ]);
+    }
+  }, [context, mode]);
 
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async () => {
+    if (!input.trim() || !context || isLoading) return;
 
-    const userMessage = input.trim();
+    const userMessage = input;
     setInput("");
     setMessages(prev => [...prev, { role: "user", content: userMessage }]);
     setIsLoading(true);
@@ -53,36 +54,41 @@ export default function Chat({ context, mode, language }: ChatProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: userMessage,
-          context,
+          context: context,
           history: messages,
           language
         })
       });
-      
+
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      
+
       setMessages(prev => [...prev, { role: "model", content: data.reply }]);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setMessages(prev => [...prev, { role: "model", content: "Sorry, I encountered an error processing your request." }]);
+      setMessages(prev => [...prev, { role: "model", content: "Sorry, I encountered an error. Please try again." }]);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className={`glass-panel ${styles.chatContainer}`}>
+    <div className={`${styles.chatContainer} glass-panel`}>
       <div className={styles.chatHeader}>
-        <MessageSquare size={18} className="text-gradient" />
+        <MessageSquare size={20} />
         <h3>AI Assistant</h3>
       </div>
       
-      <div className={styles.messagesContainer}>
+      <div className={styles.messagesList}>
+        {messages.length === 0 && (
+          <div className={styles.emptyState}>
+            Upload a document to start chatting!
+          </div>
+        )}
         {messages.map((msg, idx) => (
-          <div key={idx} className={`${styles.messageWrapper} ${msg.role === "user" ? styles.user : styles.model}`}>
-            <div className={styles.avatar}>
-              {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
+          <div key={idx} className={`${styles.messageWrapper} ${msg.role === "user" ? styles.userWrapper : styles.modelWrapper}`}>
+            <div className={`${styles.avatar} ${msg.role === "user" ? styles.userAvatar : styles.modelAvatar}`}>
+              {msg.role === "user" ? <User size={16} /> : <Bot size={16} />}
             </div>
             <div className={`${styles.bubble} ${styles.markdownContent}`}>
               <ReactMarkdown
@@ -95,33 +101,36 @@ export default function Chat({ context, mode, language }: ChatProps) {
           </div>
         ))}
         {isLoading && (
-          <div className={`${styles.messageWrapper} ${styles.model}`}>
-            <div className={styles.avatar}>
-              <Bot size={14} />
+          <div className={`${styles.messageWrapper} ${styles.modelWrapper}`}>
+            <div className={`${styles.avatar} ${styles.modelAvatar}`}>
+              <Bot size={16} />
             </div>
             <div className={styles.bubble}>
-              <div className={styles.typingIndicator}>
-                <span></span><span></span><span></span>
-              </div>
+              <span className={styles.typingIndicator}>...</span>
             </div>
           </div>
         )}
         <div ref={messagesEndRef} />
       </div>
-      
-      <form onSubmit={handleSend} className={styles.inputForm}>
+
+      <div className={styles.inputArea}>
         <input 
           type="text" 
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
           placeholder="Ask me anything..."
-          className={styles.inputField}
-          disabled={isLoading}
+          className={styles.input}
+          disabled={!context || isLoading}
         />
-        <button type="submit" className={styles.sendBtn} disabled={!input.trim() || isLoading}>
+        <button 
+          onClick={sendMessage} 
+          disabled={!context || !input.trim() || isLoading}
+          className={styles.sendButton}
+        >
           <Send size={18} />
         </button>
-      </form>
+      </div>
     </div>
   );
 }

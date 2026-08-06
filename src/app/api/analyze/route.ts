@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { GoogleAIFileManager, FileState } from "@google/generative-ai/server";
+import { GoogleAIFileManager } from "@google/generative-ai/server";
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
@@ -10,9 +10,6 @@ export const maxDuration = 60;
 export async function POST(req: Request) {
   try {
     const { images, mode, language = "English" } = await req.json();
-    if (!images || images.length === 0) {
-      return NextResponse.json({ error: "No input provided" }, { status: 400 });
-    }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -28,89 +25,95 @@ export async function POST(req: Request) {
     let imageParts: any[] = [];
     let uploadedFiles: string[] = [];
     
-    for (const image of images) {
-      const base64Data = image.split(",")[1];
-      const mimeType = image.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,.*/)?.[1] || "image/jpeg";
+    // For large base64 files like PDFs, write to temp file and use Gemini File API
+    for (let i = 0; i < images.length; i++) {
+      const b64 = images[i];
+      if (!b64 || typeof b64 !== "string") continue;
       
-      if (mimeType === "application/pdf") {
-        // Handle PDF with FileManager for large files
-        const buffer = Buffer.from(base64Data, 'base64');
-        const tempFilePath = path.join(os.tmpdir(), `upload-${Date.now()}-${Math.random().toString(36).substring(7)}.pdf`);
+      const match = b64.match(/^data:(.*);base64,(.*)$/);
+      if (!match) continue;
+      
+      const mimeType = match[1];
+      const base64Data = match[2];
+      
+      const buffer = Buffer.from(base64Data, "base64");
+      const sizeMB = buffer.length / (1024 * 1024);
+      
+      if (sizeMB > 15) {
+        // Upload via File API for large files
+        const ext = mimeType.split("/")[1] || "tmp";
+        const tempFilePath = path.join(os.tmpdir(), `upload_${Date.now()}_${i}.${ext}`);
         fs.writeFileSync(tempFilePath, buffer);
         
         try {
-          const uploadResponse = await fileManager.uploadFile(tempFilePath, {
-            mimeType: "application/pdf",
+          const uploadResult = await fileManager.uploadFile(tempFilePath, {
+            mimeType: mimeType,
+            displayName: `Upload ${i}`,
           });
           
-          let file = await fileManager.getFile(uploadResponse.file.name);
-          while (file.state === FileState.PROCESSING) {
+          let fileState = await fileManager.getFile(uploadResult.file.name);
+          while (fileState.state === "PROCESSING") {
             await new Promise((resolve) => setTimeout(resolve, 2000));
-            file = await fileManager.getFile(uploadResponse.file.name);
+            fileState = await fileManager.getFile(uploadResult.file.name);
           }
           
-          if (file.state === FileState.FAILED) {
-            throw new Error("PDF processing failed on Gemini servers.");
+          if (fileState.state === "FAILED") {
+            throw new Error("Video processing failed.");
           }
           
+          uploadedFiles.push(uploadResult.file.name);
           imageParts.push({
             fileData: {
-              fileUri: uploadResponse.file.uri,
-              mimeType: uploadResponse.file.mimeType
+              mimeType: uploadResult.file.mimeType,
+              fileUri: uploadResult.file.uri,
             }
           });
-          uploadedFiles.push(uploadResponse.file.name);
         } finally {
-          // Cleanup temp file on disk
-          if (fs.existsSync(tempFilePath)) {
-            fs.unlinkSync(tempFilePath);
-          }
+          fs.unlinkSync(tempFilePath);
         }
       } else {
+        // Use inline data for small files
         imageParts.push({
           inlineData: {
             data: base64Data,
-            mimeType
+            mimeType: mimeType,
           },
         });
       }
     }
 
     let prompt = "";
-    if (mode === "notes") {
-      prompt = `
-You are an expert at transcribing, organizing, and explaining messy handwritten notes, PDFs, and documents from whiteboards, blackboards, or notebooks.
-Analyze the attached document and extract the information into a structured JSON format.
-Ensure you provide a detailed explanation of the concepts.
-CRITICAL INSTRUCTION: Do NOT hallucinate or invent information. If the document is unreadable, empty, or contains no useful text, you must return an error or clearly state in the summary that the document could not be read.
-CRITICAL LANGUAGE INSTRUCTION: You MUST generate the ENTIRE JSON response exclusively in ${language}. Do not use any other language.
-Follow this JSON schema strictly, without any markdown formatting like \`\`\`json:
+    
+    if (mode === "lecture") {
+      prompt = `You are an expert academic assistant. I am providing you with the audio/transcript of a lecture.
+CRITICAL INSTRUCTION: You MUST reply entirely in ${language}. Do not use any other language in your response.
+
+Extract the following information and return it EXACTLY as a raw JSON object (do not wrap in markdown \`\`\`json block). Ensure all keys and string values are in ${language}.
 {
-  "title": "Main topic or title of the notes",
-  "topics": [
+  "title": "Title of the lecture or topic",
+  "summary": "High-level summary of the recording",
+  "keyPoints": ["Point 1", "Point 2", "Point 3"],
+  "notes": "Detailed, well-structured notes extracted from the lecture",
+  "actionItems": ["Homework 1", "Readings to do"],
+  "quiz": [
     {
-      "heading": "Subheading or topic section",
-      "points": ["Point 1", "Point 2"]
+      "question": "A relevant multiple-choice question?",
+      "options": ["Option A", "Option B", "Option C", "Option D"],
+      "answer": "The exact text of the correct option"
     }
   ],
-  "detailedExplanation": "A very detailed, comprehensive explanation of all the concepts covered in the notes/document",
-  "summary": "A brief summary of what the notes/document are about",
-  "additionalInfo": "Any other context, formulas, diagrams described in text, or side notes",
   "flashcards": [
     {
-      "front": "Question or term based on the notes",
-      "back": "Answer or definition"
+      "front": "Key concept or question from the lecture",
+      "back": "Explanation or answer"
     }
   ]
 }`;
     } else {
-      prompt = `
-You are an expert academic assistant and transcriptionist.
-Analyze the attached audio lecture recording or document and extract the information into a structured JSON format.
-Ensure you provide a high-level summary, detailed notes, key points, action items (like homework), and a quiz.
-CRITICAL INSTRUCTION: Do NOT hallucinate or invent information. Rely STRICTLY on the provided transcript or audio. If the input is empty or incomprehensible, state that it could not be read.
-CRITICAL LANGUAGE INSTRUCTION: You MUST generate the ENTIRE JSON response exclusively in ${language}. Do not use any other language.
-Follow this JSON schema strictly, without any markdown formatting like \`\`\`json:
+      prompt = `You are an expert academic assistant. I am providing you with images of handwritten or typed notes.
+CRITICAL INSTRUCTION: You MUST reply entirely in ${language}. Do not use any other language in your response.
+
+Extract the following information and return it EXACTLY as a raw JSON object (do not wrap in markdown \`\`\`json block). Ensure all keys and string values are in ${language}.
 {
   "title": "Title of the lecture or topic",
   "summary": "High-level summary of the recording",
@@ -177,16 +180,20 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
     
     // Clean up potential markdown JSON block
     let cleanJsonStr = text.trim();
-    if (cleanJsonStr.startsWith("\`\`\`json")) {
-      cleanJsonStr = cleanJsonStr.replace(/^\`\`\`json\n/, "").replace(/\n\`\`\`$/, "");
-    }
-    if (cleanJsonStr.startsWith("\`\`\`")) {
-      cleanJsonStr = cleanJsonStr.replace(/^\`\`\`\n/, "").replace(/\n\`\`\`$/, "");
+    if (cleanJsonStr.startsWith("```json")) {
+      cleanJsonStr = cleanJsonStr.replace(/^```json\n?/, "");
+      cleanJsonStr = cleanJsonStr.replace(/\n?```$/, "");
     }
     
-    const parsedData = JSON.parse(cleanJsonStr);
-    
-    return NextResponse.json({ result: parsedData });
+    let parsed;
+    try {
+      parsed = JSON.parse(cleanJsonStr);
+    } catch (e) {
+      console.error("Failed to parse JSON:", cleanJsonStr);
+      throw new Error("AI returned invalid JSON format");
+    }
+
+    return NextResponse.json({ result: parsed });
   } catch (error: any) {
     console.error("API Error:", error);
     return NextResponse.json({ error: error.message || "Failed to analyze document" }, { status: 500 });

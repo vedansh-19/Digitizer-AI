@@ -1,19 +1,13 @@
-import { Mode } from "@/app/page";
-import styles from "./ResultsViewer.module.css";
-import { CheckCircle2, FileText, Loader2 } from "lucide-react";
+import { CheckCircle, AlertCircle, PlayCircle, Loader2 } from "lucide-react";
 import Flashcards from "./Flashcards";
+import styles from "./ResultsViewer.module.css";
+import { Mode } from "@/app/page";
 
-interface ResultsViewerProps {
-  result: any;
-  isProcessing: boolean;
-  mode: Mode;
-}
-
-export default function ResultsViewer({ result, isProcessing, mode }: ResultsViewerProps) {
+export default function ResultsViewer({ result, isProcessing, mode }: { result: any, isProcessing: boolean, mode: Mode }) {
   if (isProcessing) {
     return (
-      <div className={`glass-panel ${styles.loadingState}`}>
-        <Loader2 className="spinner" size={40} color="var(--accent-primary)" />
+      <div className={`${styles.loadingState} glass-panel`}>
+        <Loader2 className={styles.spinner} size={40} />
         <p>Extracting structured data...</p>
       </div>
     );
@@ -21,120 +15,88 @@ export default function ResultsViewer({ result, isProcessing, mode }: ResultsVie
 
   if (!result) return null;
 
+  const isLecture = mode === "lecture";
+
   return (
-    <div className={`glass-panel ${styles.resultsContainer} animate-fade-in`}>
+    <div className={`${styles.resultsContainer} glass-panel animate-fade-in`}>
       <div className={styles.header}>
         <div className={styles.titleWrapper}>
-          <FileText className="text-gradient" />
-          <h3>{mode === "notes" ? "Structured Notes" : "Lecture Notes"}</h3>
-        </div>
-        <div className={styles.statusBadge}>
-          <CheckCircle2 size={14} />
-          <span>Extracted Successfully</span>
+          <CheckCircle className="text-gradient" size={28} />
+          <h3 className="text-gradient">{isLecture ? "Lecture Summary" : "Digitized Notes"}</h3>
         </div>
       </div>
 
       <div className={styles.content}>
-
-        {mode === "notes" && result.title && (
-          <div className={styles.section}>
-            <h2 className={styles.notesTitle}>{result.title}</h2>
-            {result.topics && result.topics.map((topic: any, idx: number) => (
-              <div key={idx} className={styles.topicBlock}>
-                <h4>{topic.heading}</h4>
-                <ul>
-                  {topic.points.map((pt: string, i: number) => (
-                    <li key={i}>{pt}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-            
-            {result.flashcards && result.flashcards.length > 0 && (
-              <Flashcards cards={result.flashcards} />
-            )}
-          </div>
-        )}
-
-        {mode === "lecture" && result.title && (
-          <div className={styles.section}>
-            <h2 className={styles.notesTitle}>{result.title}</h2>
-            
-            {result.keyPoints && result.keyPoints.length > 0 && (
-              <div className={styles.topicBlock}>
-                <h4>Key Points</h4>
-                <ul>
-                  {result.keyPoints.map((pt: string, i: number) => (
-                    <li key={i}>{pt}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            {result.notes && (
-              <div className={styles.topicBlock}>
-                <h4>Detailed Notes</h4>
-                <p style={{ lineHeight: "1.6", color: "var(--text-secondary)" }}>{result.notes}</p>
-              </div>
-            )}
-
-            {result.actionItems && result.actionItems.length > 0 && (
-              <div className={styles.topicBlock}>
-                <h4>Action Items</h4>
-                <ul>
-                  {result.actionItems.map((item: string, i: number) => (
-                    <li key={i}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {result.quiz && result.quiz.length > 0 && (
-              <div className={styles.topicBlock} style={{ marginTop: "2rem", padding: "1.5rem", background: "rgba(0,0,0,0.2)", borderRadius: "12px" }}>
-                <h4 style={{ color: "var(--accent-primary)", marginBottom: "1rem" }}>Pop Quiz!</h4>
-                {result.quiz.map((q: any, i: number) => (
-                  <div key={i} style={{ marginBottom: "1.5rem" }}>
-                    <p style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>{i + 1}. {q.question}</p>
-                    <ul style={{ listStyleType: "none", paddingLeft: "1rem", marginBottom: "0.5rem" }}>
-                      {q.options && q.options.map((opt: string, optIdx: number) => (
-                        <li key={optIdx} style={{ padding: "0.25rem 0", color: "var(--text-secondary)" }}>• {opt}</li>
-                      ))}
-                    </ul>
-                    <details style={{ cursor: "pointer", color: "var(--accent-secondary)", fontSize: "0.9rem" }}>
-                      <summary>Reveal Answer</summary>
-                      <p style={{ marginTop: "0.5rem", color: "var(--text-primary)", fontWeight: "500" }}>{q.answer}</p>
-                    </details>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {result.flashcards && result.flashcards.length > 0 && (
-              <Flashcards cards={result.flashcards} />
-            )}
-          </div>
-        )}
-
-        {result.detailedExplanation && (
-          <div className={styles.section}>
-            <h4>Detailed Explanation</h4>
-            <p style={{ lineHeight: "1.6", color: "var(--text-secondary)" }}>{result.detailedExplanation}</p>
-          </div>
+        {result.title && (
+          <h2 className={styles.notesTitle}>{result.title}</h2>
         )}
 
         {result.summary && (
           <div className={styles.summaryBox}>
-            <h4>Summary</h4>
+            <h4>Executive Summary</h4>
             <p>{result.summary}</p>
           </div>
         )}
 
-        {result.additionalInfo && (
-          <div className={styles.section}>
-            <h4>Additional Information</h4>
-            <p className={styles.rawText}>{result.additionalInfo}</p>
+        {result.keyPoints && result.keyPoints.length > 0 && (
+          <div className={styles.topicBlock}>
+            <h4>Key Points</h4>
+            <ul>
+              {result.keyPoints.map((point: string, i: number) => (
+                <li key={i}>{point}</li>
+              ))}
+            </ul>
           </div>
         )}
+
+        {result.actionItems && result.actionItems.length > 0 && (
+          <div className={styles.topicBlock}>
+            <h4>Action Items / To-Dos</h4>
+            <ul>
+              {result.actionItems.map((item: string, i: number) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {result.notes && (
+          <div className={styles.topicBlock}>
+            <h4>Detailed Notes</h4>
+            <div className={styles.rawText}>
+              {result.notes}
+            </div>
+          </div>
+        )}
+
+        {result.quiz && result.quiz.length > 0 && (
+          <div className={styles.topicBlock}>
+            <h4>Practice Quiz</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {result.quiz.map((q: any, i: number) => (
+                <div key={i} style={{ background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '12px' }}>
+                  <p style={{ fontWeight: 'bold', marginBottom: '1rem', color: 'var(--text-primary)' }}>Q{i+1}: {q.question}</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    {q.options.map((opt: string, j: number) => (
+                      <div key={j} style={{ padding: '0.75rem', background: 'var(--bg-glass)', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                        {String.fromCharCode(65 + j)}. {opt}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-color)', fontSize: '0.9rem' }}>
+                    <span style={{ color: 'var(--accent-secondary)', fontWeight: 'bold' }}>Answer: </span>
+                    <span style={{ color: 'var(--text-primary)' }}>{q.answer}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {result.flashcards && result.flashcards.length > 0 && (
+          <Flashcards cards={result.flashcards} />
+        )}
+        
       </div>
     </div>
   );
