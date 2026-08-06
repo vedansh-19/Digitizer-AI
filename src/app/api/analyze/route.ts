@@ -24,7 +24,6 @@ export async function POST(req: Request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     const fileManager = new GoogleAIFileManager(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
 
     let imageParts: any[] = [];
     let uploadedFiles: string[] = [];
@@ -134,18 +133,43 @@ Follow this JSON schema strictly, without any markdown formatting like \`\`\`jso
 }`;
     }
 
+    const MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.1-flash-lite"];
     let result;
-    try {
-      result = await model.generateContent([prompt, ...imageParts]);
-    } finally {
-      // Cleanup files from Gemini
-      for (const name of uploadedFiles) {
+    let lastError;
+
+    for (const modelName of MODELS) {
+      const currentModel = genAI.getGenerativeModel({ model: modelName });
+      for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          await fileManager.deleteFile(name);
-        } catch (e) {
-          console.error("Failed to delete file from Gemini:", e);
+          result = await currentModel.generateContent([prompt, ...imageParts]);
+          break;
+        } catch (err: any) {
+          lastError = err;
+          const status = err?.status || err?.httpErrorCode?.status;
+          if (status === 503 || status === 429) {
+            const delay = Math.pow(2, attempt) * 1000 + Math.random() * 500;
+            console.log(`Model ${modelName} attempt ${attempt + 1} failed (${status}), retrying in ${Math.round(delay)}ms...`);
+            await new Promise(r => setTimeout(r, delay));
+          } else {
+            throw err;
+          }
         }
       }
+      if (result) break;
+      console.log(`All retries exhausted for ${modelName}, trying next model...`);
+    }
+
+    // Cleanup uploaded files from Gemini
+    for (const name of uploadedFiles) {
+      try {
+        await fileManager.deleteFile(name);
+      } catch (e) {
+        console.error("Failed to delete file from Gemini:", e);
+      }
+    }
+
+    if (!result) {
+      throw lastError || new Error("All models are currently unavailable. Please try again in a minute.");
     }
     
     const response = await result.response;
