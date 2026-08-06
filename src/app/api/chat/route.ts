@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
     const systemPrompt = `You are a helpful AI assistant in an app that digitizes messy notes and transcriptions.
 You have been provided with the following extracted data from a user's input:
